@@ -25,7 +25,7 @@ uvicorn src.colidea_app.main:app --reload
 
 Define `OPENAI_API_KEY` en el entorno y opcionalmente `COLIDEA_MODEL` (por defecto `gpt-4o-mini`).
 
-colidea-test-ufv siempre puede apuntar a OpenRouter configurando `COLIDEA_PROVIDER=openrouter`, `COLIDEA_MODEL=openrouter/google/gpt-4o-mini` y pasando `OPENROUTER_API_KEY`. Por ejemplo:
+colidea-test-ufv siempre puede apuntar a OpenRouter configurando `COLIDEA_PROVIDER=openrouter`, `COLIDEA_MODEL=openrouter/openai/gpt-4o-mini` y pasando `OPENROUTER_API_KEY`. Por ejemplo:
 
 ```bash
 COLIDEA_PROVIDER=openrouter \
@@ -43,7 +43,7 @@ python scripts/sample_generate.py
 ## Interfaz web (maqueta UFV)
 La aplicación suma una landing básica en `/` con la paleta UFV (header hero, tarjetas y botones con `Roboto Slab`/sans-serif y colores institucionales). Está servida desde `src/colidea_app/templates/index.html` y `src/colidea_app/static/css/main.css`. En el formulario puedes ajustar el número de preguntas entre 3 y 10 con el control deslizante, seleccionar niveles de Bloom y tipos de pregunta, definir cuántas alternativas (2-5) debe tener cada pregunta, e incluso extraer un PDF/DOCX/TXT para que vaya directo al prompt. Al pulsar “Generar preguntas” la landing llama a `/generate` y las preguntas devueltas (normalizadas para evitar `[object Object]`) se muestran en la tarjeta derecha junto con el tipo, nivel cognitivo y pista; el texto que se envía incluye un matiz del modelo Formar para Transformar (aprendizaje aplicado, formación humana, acompañamiento, actualización crítica). Cuando el contenedor está en marcha (`http://localhost:8080`) puedes navegar a esa vista para enseñársela a la Comisión.
 
-También existe una página de administración en `/admin` para cambiar proveedor, modelo y la plantilla de prompt sin tocar código o reiniciar el contenedor. La configuración se guarda en `src/colidea_app/admin_config.json`, y puedes editarla desde la GUI para probar prompts distintos antes de generar las preguntas. La plantilla puede usar `${number_of_questions}` y `${number_of_alternatives}` para que el modelo sepa cuántas preguntas y alternativas debe devolver.
+También existe una página de administración en `/admin` para cambiar proveedor, modelo y la plantilla de prompt sin tocar código o reiniciar el contenedor. Lánzala desde el botón "Administración" en la cabecera; la configuración se guarda en `src/colidea_app/admin_config.json` y puedes editarla desde la GUI para probar prompts distintos antes de generar las preguntas. La plantilla puede usar `${number_of_questions}` y `${number_of_alternatives}` para que el modelo sepa cuántas preguntas y alternativas debe devolver.
 
 ## Carga de documentos
 Para preparar preguntas a partir de documentos ya existentes (PDF/Word/TXT), usa el control “Extraer texto” que sube el archivo al endpoint `/extract`. El backend usa `pdfplumber` y `python-docx` para leer el contenido y devuelve el texto plano a la aplicación, que lo muestra en el textarea principal y lo usa en el prompt. Si el archivo no contiene texto legible se mostrará un error en pantalla.

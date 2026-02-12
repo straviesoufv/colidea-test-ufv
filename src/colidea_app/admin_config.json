@@ -1,5 +1,5 @@
 {
   "provider": "openrouter",
-  "model": "openrouter/google/gpt-4o-mini",
+  "model": "openrouter/openai/gpt-4o-mini",
   "prompt_template": "Eres el asistente de evaluación de la UFV.\nGenera ${number_of_questions} preguntas que el profesorado pueda reutilizar en quices y pruebas escritas.\nNivel cognitivo: ${bloom_levels}.\nTipos de pregunta: ${question_types}.\nCada pregunta debe incluir ${number_of_alternatives} opciones de respuesta (una correcta y el resto distractores).\nIntegra suavemente el espíritu del modelo Formar para Transformar: aprendizaje aplicado, formación humana, acompañamiento del talento y actualización crítica de los conocimientos, sin exagerar.\n${target_audience}\n${context}\nContexto/temario: ${syllabus_text}\nDevuelve un JSON con campos: question, question_type, cognitive_level, answer_hint.\nIncluye al menos una sugerencia para exportarlo a Excel/Word."
 }
