@@ -64,8 +64,9 @@ DEFAULT_PROMPT_TEMPLATE = (
     "${target_audience}\n"
     "${context}\n"
     "Contexto/temario: ${syllabus_text}\n"
-    "Devuelve un JSON con campos: question, question_type, cognitive_level, answer_hint.\n"
-    "Incluye al menos una sugerencia para exportarlo a Excel/Word."
+    "Responde ÚNICAMENTE en JSON válido, sin texto fuera del JSON.\n"
+    "Devuelve un objeto con esta forma exacta: {\"questions\":[{\"question\":\"...\",\"question_type\":\"...\",\"cognitive_level\":\"...\",\"answer_hint\":\"...\"}],\"export_suggestion\":\"...\"}.\n"
+    "Incluye al menos una sugerencia para exportarlo a Excel/Word en export_suggestion."
 )
 
 config_lock = Lock()
@@ -232,6 +233,7 @@ def call_openrouter_model(prompt: str) -> List[dict]:
         "input": prompt,
         "temperature": 0.3,
         "max_output_tokens": 800,
+        "response_format": {"type": "json_object"},
     }
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -285,7 +287,7 @@ def _extract_response_text(body: dict) -> str:
 
 def _parse_model_output(output: str) -> List[dict]:
     try:
-        return json.loads(output)
+        parsed = json.loads(output)
     except json.JSONDecodeError:
         logger.error("Invalid IA output: %s", output)
         raise HTTPException(
@@ -295,6 +297,22 @@ def _parse_model_output(output: str) -> List[dict]:
                 "raw_output": output,
             },
         )
+
+    if isinstance(parsed, list):
+        return parsed
+    if isinstance(parsed, dict):
+        if isinstance(parsed.get("questions"), list):
+            return parsed["questions"]
+        if isinstance(parsed.get("data"), list):
+            return parsed["data"]
+
+    raise HTTPException(
+        status_code=500,
+        detail={
+            "error": "JSON válido pero formato no compatible",
+            "raw_output": parsed,
+        },
+    )
 
 
 @app.post("/generate", response_model=List[QuestionResponse])
