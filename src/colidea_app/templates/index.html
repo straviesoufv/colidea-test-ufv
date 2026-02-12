@@ -78,7 +78,10 @@
             <span class="tag-ufv tag-secondary">Canvas</span>
             <span class="tag-ufv">Humanista</span>
           </div>
-          <button id="generateButton" class="btn-primary" type="button">Generar preguntas</button>
+          <div class="hero-actions">
+            <button id="generateButton" class="btn-primary" type="button">Generar preguntas</button>
+            <button id="downloadCsvButton" class="btn-secondary" type="button">Descargar CSV</button>
+          </div>
           <p id="generateStatus" class="footer-note"><em>Las preguntas generadas aparecerán aquí abajo.</em></p>
         </article>
 
@@ -138,8 +141,10 @@
       const uploadStatus = document.getElementById("uploadStatus");
       const syllabusInput = document.getElementById("syllabusInput");
       const generateBtn = document.getElementById("generateButton");
+      const downloadCsvButton = document.getElementById("downloadCsvButton");
       const generateStatus = document.getElementById("generateStatus");
       const generatedList = document.getElementById("generatedList");
+      let latestQuestions = [];
       const bloomSelect = document.getElementById("bloomSelect");
       const typeSelect = document.getElementById("typeSelect");
       const alternativesSelect = document.getElementById("alternativesSelect");
@@ -181,11 +186,27 @@
           header.textContent = `[${innerText(q.question_type)} · ${innerText(q.cognitive_level)}]`;
           const body = document.createElement("p");
           body.textContent = innerText(q.question);
+          item.appendChild(header);
+          item.appendChild(body);
+
+          const options = Array.isArray(q.options) ? q.options : [];
+          if (options.length) {
+            const optionsList = document.createElement("ul");
+            optionsList.className = "options-list";
+            options.forEach((opt, idx) => {
+              const li = document.createElement("li");
+              const label = String.fromCharCode(65 + idx);
+              const rawOpt = innerText(opt);
+              const marker = rawOpt === innerText(q.correct_option) ? " ✅" : "";
+              li.textContent = `${label}) ${rawOpt}${marker}`;
+              optionsList.appendChild(li);
+            });
+            item.appendChild(optionsList);
+          }
+
           const hint = document.createElement("div");
           hint.className = "hint";
           hint.textContent = `→ Pista: ${innerText(q.answer_hint)}`;
-          item.appendChild(header);
-          item.appendChild(body);
           item.appendChild(hint);
           generatedList.appendChild(item);
         });
@@ -212,6 +233,33 @@
           } catch (err) {
             uploadStatus.textContent = err.message;
           }
+        });
+      }
+
+      if (downloadCsvButton) {
+        downloadCsvButton.addEventListener("click", () => {
+          if (!latestQuestions.length) {
+            generateStatus.textContent = "Primero genera preguntas para poder descargar el CSV.";
+            return;
+          }
+          const headers = ["question", "question_type", "cognitive_level", "answer_hint", "options", "correct_option"];
+          const escapeCsv = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+          const rows = latestQuestions.map((q) => [
+            q.question,
+            q.question_type,
+            q.cognitive_level,
+            q.answer_hint,
+            Array.isArray(q.options) ? q.options.join(" | ") : "",
+            q.correct_option || "",
+          ]);
+          const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "colidea_test_ufv_preguntas.csv";
+          link.click();
+          URL.revokeObjectURL(url);
         });
       }
 
@@ -245,8 +293,9 @@
               throw new Error(error.detail || "No se pudieron generar preguntas.");
             }
             const data = await res.json();
-            renderGenerated(data);
-            generateStatus.textContent = `Se han generado ${data.length} preguntas.`;
+            latestQuestions = Array.isArray(data) ? data : [];
+            renderGenerated(latestQuestions);
+            generateStatus.textContent = `Se han generado ${latestQuestions.length} preguntas.`;
           } catch (err) {
             generateStatus.textContent = err.message;
           } finally {

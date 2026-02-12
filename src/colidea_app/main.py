@@ -65,7 +65,7 @@ DEFAULT_PROMPT_TEMPLATE = (
     "${context}\n"
     "Contexto/temario: ${syllabus_text}\n"
     "Responde ÚNICAMENTE en JSON válido, sin texto fuera del JSON.\n"
-    "Devuelve un objeto con esta forma exacta: {\"questions\":[{\"question\":\"...\",\"question_type\":\"...\",\"cognitive_level\":\"...\",\"answer_hint\":\"...\"}],\"export_suggestion\":\"...\"}.\n"
+    "Devuelve un objeto con esta forma exacta: {\"questions\":[{\"question\":\"...\",\"question_type\":\"...\",\"cognitive_level\":\"...\",\"answer_hint\":\"...\",\"options\":[\"A...\",\"B...\"],\"correct_option\":\"...\"}],\"export_suggestion\":\"...\"}.\n"
     "Incluye al menos una sugerencia para exportarlo a Excel/Word en export_suggestion."
 )
 
@@ -133,6 +133,8 @@ class QuestionResponse(BaseModel):
     answer_hint: str
     cognitive_level: str
     question_type: str
+    options: Optional[List[str]] = None
+    correct_option: Optional[str] = None
 
 
 class GenerationPayload(BaseModel):
