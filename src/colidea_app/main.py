@@ -36,7 +36,9 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 BASE_DIR = os.path.dirname(__file__)
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
-CONFIG_PATH = Path(os.environ.get("COLIDEA_ADMIN_CONFIG", os.path.join(BASE_DIR, "admin_config.json")))
+CONFIG_DIR = Path(os.environ.get("COLIDEA_CONFIG_DIR", "/data/colidea-config"))
+CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+CONFIG_PATH = Path(os.environ.get("COLIDEA_ADMIN_CONFIG", CONFIG_DIR / "admin_config.json"))
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
@@ -84,6 +86,7 @@ def load_admin_config() -> dict:
 
 
 def write_admin_config(data: dict):
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     with CONFIG_PATH.open("w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=2)
 
