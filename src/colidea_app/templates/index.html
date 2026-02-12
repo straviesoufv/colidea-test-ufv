@@ -154,6 +154,19 @@
         return Array.from(select.selectedOptions).map((opt) => opt.value || opt.textContent.trim());
       };
 
+      const innerText = (value) => {
+        if (typeof value === "string") return value;
+        if (typeof value === "number") return String(value);
+        if (typeof value === "boolean") return value ? "Sí" : "No";
+        if (!value) return "";
+        if (typeof value === "object") {
+          if (typeof value.text === "string") return value.text;
+          if (Array.isArray(value) && value.length) return value.map(innerText).filter(Boolean).join(", ");
+          if (typeof value.content === "string") return value.content;
+        }
+        return JSON.stringify(value);
+      };
+
       const renderGenerated = (questions) => {
         if (!generatedList) return;
         generatedList.innerHTML = "";
@@ -164,12 +177,12 @@
         questions.forEach((q) => {
           const item = document.createElement("li");
           const header = document.createElement("strong");
-          header.textContent = `[${q.question_type} · ${q.cognitive_level}]`;
+          header.textContent = `[${innerText(q.question_type)} · ${innerText(q.cognitive_level)}]`;
           const body = document.createElement("p");
-          body.textContent = q.question;
+          body.textContent = innerText(q.question);
           const hint = document.createElement("div");
           hint.className = "hint";
-          hint.textContent = `→ Pista: ${q.answer_hint}`;
+          hint.textContent = `→ Pista: ${innerText(q.answer_hint)}`;
           item.appendChild(header);
           item.appendChild(body);
           item.appendChild(hint);
