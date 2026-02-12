@@ -1,4 +1,4 @@
-# Identidad visual UFV para Colidea
+# Identidad visual UFV para colidea-test-ufv
 
 ## Referencia
 Basado en la homepage pública `https://www.ufv.es`. El portal usa una estética sobria pero fresca: fondo claro, tipografía con remates para titulares y una paleta azul/naranja/verde con mucho contraste. Ese estilo es el que replicaremos en la interfaz del MVP (landing + controles) para que el profesorado lo perciba como continuidad institucional.

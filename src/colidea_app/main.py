@@ -17,7 +17,7 @@ try:
 except ImportError:  # pragma: no cover
     openai = None
 
-app = FastAPI(title="Colidea – Generador de preguntas de evaluación")
+app = FastAPI(title="colidea-test-ufv – Generador de preguntas de evaluación")
 
 BASE_DIR = os.path.dirname(__file__)
 STATIC_DIR = os.path.join(BASE_DIR, "static")

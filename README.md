@@ -1,6 +1,6 @@
-# Colidea · Generador de preguntas inteligentes para evaluación (UFV)
+# colidea-test-ufv · Generador de preguntas inteligentes para evaluación (UFV)
 
-Colidea es el MVP de la Comisión de IA de la Universidad Francisco de Vitoria para facilitar la creación de preguntas tipo test y de desarrollo a partir de guías docentes, temarios o contenidos compartidos por el profesorado. Arranca con un servicio web ligero y puede enfocar la exportación a Excel/Word y Canvas en fases siguientes.
+colidea-test-ufv es el MVP de la Comisión de IA de la Universidad Francisco de Vitoria para facilitar la creación de preguntas tipo test y de desarrollo a partir de guías docentes, temarios o contenidos compartidos por el profesorado. Arranca con un servicio web ligero y puede enfocar la exportación a Excel/Word y Canvas en fases siguientes.
 
 ## Estructura
 
@@ -11,7 +11,7 @@ Colidea es el MVP de la Comisión de IA de la Universidad Francisco de Vitoria p
 ## Flujo mínimo viable
 
 1. El profesor sube el temario (texto, Word o PDF convertido a texto) y selecciona niveles de Bloom y tipos de pregunta.
-2. Colidea construye un prompt configurable con los datos y llama a la API (OpenAI/otro) para generar preguntas + pistas + metadatos.
+2. colidea-test-ufv construye un prompt configurable con los datos y llama a la API (OpenAI/otro) para generar preguntas + pistas + metadatos.
 3. Devuelve un JSON que se puede exportar a CSV/Excel y, más adelante, transformarse en QTI para Canvas.
 
 ## Arranque local (pruebas)
@@ -25,13 +25,13 @@ uvicorn src.colidea_app.main:app --reload
 
 Define `OPENAI_API_KEY` en el entorno y opcionalmente `COLIDEA_MODEL` (por defecto `gpt-4o-mini`).
 
-Colidea siempre puede apuntar a OpenRouter configurando `COLIDEA_PROVIDER=openrouter`, `COLIDEA_MODEL=openrouter/google/gpt-4o-mini` y pasando `OPENROUTER_API_KEY`. Por ejemplo:
+colidea-test-ufv siempre puede apuntar a OpenRouter configurando `COLIDEA_PROVIDER=openrouter`, `COLIDEA_MODEL=openrouter/google/gpt-4o-mini` y pasando `OPENROUTER_API_KEY`. Por ejemplo:
 
 ```bash
 COLIDEA_PROVIDER=openrouter \
   COLIDEA_MODEL=openrouter/google/gpt-4o-mini \
   OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
-  docker run -e COLIDEA_PROVIDER -e COLIDEA_MODEL -e OPENROUTER_API_KEY -p 8080:8080 colidea:latest
+  docker run -e COLIDEA_PROVIDER -e COLIDEA_MODEL -e OPENROUTER_API_KEY -p 8080:8080 colidea-test-ufv:latest
 ```
 
 También puedes ejecutar el simulador offline:
@@ -58,11 +58,11 @@ La API permanece accesible en `/generate` y `/health` muestra el modelo activo. 
 ## Ejecutar en Docker
 
 ```bash
-docker build -t colidea:latest .
-docker run -p 8080:8080 colidea:latest
+docker build -t colidea-test-ufv:latest .
+docker run -p 8080:8080 colidea-test-ufv:latest
 ```
 
-La API escucha en el puerto 8080 y expone `/generate` y `/` (sanity check). Asegúrate de pasar `OPENAI_API_KEY` en tiempo de ejecución (por ejemplo, `docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -p 8080:8080 colidea:latest`).
+La API escucha en el puerto 8080 y expone `/generate` y `/` (sanity check). Asegúrate de pasar `OPENAI_API_KEY` en tiempo de ejecución (por ejemplo, `docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -p 8080:8080 colidea-test-ufv:latest`).
 
 ## Requisitos para producción
 
