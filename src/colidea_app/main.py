@@ -1,5 +1,8 @@
 from typing import List, Optional
+import json
 import os
+
+import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -10,7 +13,11 @@ except ImportError:  # pragma: no cover
 
 app = FastAPI(title="Colidea – Generador de preguntas de evaluación")
 
-MODEL = os.environ.get("COLIDEA_MODEL", "gpt-4o-mini")
+PROVIDER = os.environ.get("COLIDEA_PROVIDER", "openrouter").lower().strip()
+DEFAULT_MODEL = "openrouter/google/gpt-4o-mini" if PROVIDER == "openrouter" else "gpt-4o-mini"
+MODEL = os.environ.get("COLIDEA_MODEL", DEFAULT_MODEL)
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
 
 class PromptConfig(BaseModel):
@@ -54,17 +61,23 @@ def build_prompt(payload: GenerationPayload) -> str:
 
 
 def call_model(prompt: str) -> List[dict]:
+    if PROVIDER == "openrouter":
+        return call_openrouter_model(prompt)
+    return call_openai_model(prompt)
+
+
+def call_openai_model(prompt: str) -> List[dict]:
     if not openai:
         raise HTTPException(
             status_code=503,
             detail="No se ha instalado la biblioteca openai. Ejecuta pip install -r requirements.txt",
         )
-    if not os.environ.get("OPENAI_API_KEY"):
+    if not OPENAI_API_KEY:
         raise HTTPException(
             status_code=412,
             detail="No hay clave OPENAI_API_KEY en el entorno.",
         )
-    client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
     response = client.responses.create(
         model=MODEL,
         input=prompt,
@@ -72,9 +85,75 @@ def call_model(prompt: str) -> List[dict]:
         temperature=0.3,
     )
     output = response.output[0].content
-    # Suponer que output es JSON en formato listo para parsear.
-    import json
+    return _parse_model_output(output)
 
+
+OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/responses"
+
+
+def call_openrouter_model(prompt: str) -> List[dict]:
+    if not OPENROUTER_API_KEY:
+        raise HTTPException(
+            status_code=412,
+            detail="No hay clave OPENROUTER_API_KEY en el entorno.",
+        )
+    payload = {
+        "model": MODEL,
+        "input": prompt,
+        "temperature": 0.3,
+        "max_output_tokens": 800,
+    }
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    response = requests.post(OPENROUTER_ENDPOINT, json=payload, headers=headers, timeout=30)
+    if not response.ok:
+        detail = response.text
+        raise HTTPException(status_code=response.status_code or 502, detail=f"OpenRouter: {detail}")
+    body = response.json()
+    raw_output = _extract_response_text(body)
+    return _parse_model_output(raw_output)
+
+
+def _extract_response_text(body: dict) -> str:
+    def _from_item(item):
+        if isinstance(item, str):
+            return item
+        if isinstance(item, dict):
+            content = item.get("content")
+            if isinstance(content, list):
+                parts = []
+                for piece in content:
+                    if isinstance(piece, dict):
+                        parts.append(piece.get("text") or piece.get("content"))
+                    elif isinstance(piece, str):
+                        parts.append(piece)
+                return "".join(filter(None, parts))
+            if isinstance(content, str):
+                return content
+            text = item.get("text")
+            if isinstance(text, str):
+                return text
+        return None
+
+    for key in ("output", "choices", "response"):  # openrouter usa varias claves
+        chunk = body.get(key)
+        if chunk is None:
+            continue
+        if isinstance(chunk, list):
+            for item in chunk:
+                value = _from_item(item)
+                if value:
+                    return value
+        else:
+            value = _from_item(chunk)
+            if value:
+                return value
+    raise HTTPException(status_code=500, detail="OpenRouter no devolvió texto válido")
+
+
+def _parse_model_output(output: str) -> List[dict]:
     try:
         return json.loads(output)
     except json.JSONDecodeError:
