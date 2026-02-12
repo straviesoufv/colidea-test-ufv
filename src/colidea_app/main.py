@@ -40,6 +40,7 @@ DEFAULT_PROMPT_TEMPLATE = (
     "Genera ${number_of_questions} preguntas que el profesorado pueda reutilizar en quices y pruebas escritas.\n"
     "Nivel cognitivo: ${bloom_levels}.\n"
     "Tipos de pregunta: ${question_types}.\n"
+    "Cada pregunta debe incluir ${number_of_alternatives} opciones de respuesta (una correcta y el resto distractores).\n"
     "${target_audience}\n"
     "${context}\n"
     "Contexto/temario: ${syllabus_text}\n"
@@ -101,6 +102,7 @@ class PromptConfig(BaseModel):
     question_types: List[str]
     context: Optional[str]
     number_of_questions: int = 8
+    number_of_alternatives: int = 4
     target_audience: Optional[str]
 
 
@@ -162,6 +164,7 @@ def build_prompt(payload: GenerationPayload) -> str:
         context=context_notes,
         target_audience=audience_tags,
         number_of_questions=config.number_of_questions,
+        number_of_alternatives=config.number_of_alternatives,
     )
 
 

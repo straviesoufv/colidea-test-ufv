@@ -30,14 +30,38 @@
           <small>Documentos Word, PDF o texto plano. Mantendremos la confidencialidad.</small>
           <textarea id="syllabusInput" class="form-control" placeholder="Pega aquí un fragmento de tu temario ..."></textarea>
           <div class="form-row">
-            <select class="form-control" aria-label="Nivel Bloom">
-              <option>Comprensión · Aplicación · Análisis</option>
-              <option>Síntesis · Evaluación · Creación</option>
-            </select>
-            <select class="form-control" aria-label="Tipo de pregunta">
-              <option>Tipo test · Selección múltiple</option>
-              <option>Desarrollo · Argumentación</option>
-            </select>
+            <div class="field-block">
+              <label for="bloomSelect">Niveles Bloom (múltiple)</label>
+              <select id="bloomSelect" class="form-control multi-select" multiple size="3">
+                <option value="Comprensión">Comprensión</option>
+                <option value="Aplicación">Aplicación</option>
+                <option value="Análisis">Análisis</option>
+                <option value="Síntesis">Síntesis</option>
+                <option value="Evaluación">Evaluación</option>
+                <option value="Creación">Creación</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label for="typeSelect">Tipo de pregunta (múltiple)</label>
+              <select id="typeSelect" class="form-control multi-select" multiple size="3">
+                <option value="Tipo test">Tipo test</option>
+                <option value="Seleccion multiple">Selección múltiple</option>
+                <option value="Desarrollo">Desarrollo</option>
+                <option value="Argumentación">Argumentación</option>
+                <option value="Caso práctico">Caso práctico</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field-block">
+              <label for="alternativesSelect">Número de alternativas</label>
+              <select id="alternativesSelect" class="form-control">
+                <option value="2">2 opciones</option>
+                <option value="3">3 opciones</option>
+                <option value="4" selected>4 opciones</option>
+                <option value="5">5 opciones</option>
+              </select>
+            </div>
           </div>
           <div class="form-row">
             <input id="fileUpload" type="file" class="form-control" accept=".pdf,.docx,.txt" />
@@ -53,30 +77,31 @@
             <span class="tag-ufv tag-secondary">Canvas</span>
             <span class="tag-ufv">Humanista</span>
           </div>
-          <button class="btn-primary">Generar preguntas</button>
+          <button id="generateButton" class="btn-primary" type="button">Generar preguntas</button>
+          <p id="generateStatus" class="footer-note"><em>Las preguntas generadas aparecerán aquí abajo.</em></p>
         </article>
 
         <article class="panel-card">
-          <h2>Panel rápido</h2>
+          <h2>Preguntas generadas</h2>
           <p>
-            A cada generación, colidea-test-ufv devuelve preguntas marcadas con el nivel cognitivo, tipo de evaluación y una
-            pista rápida. Exporta a Excel/Word o prepara el CSV para importarlo luego en Canvas.
+            Cada pregunta se devuelve con su tipo, nivel cognitivo y pista. Puedes exportarlas a Excel, Word o preparar
+            el CSV para importar a Canvas.
           </p>
-          <ul class="sample-questions">
+          <ul id="generatedList" class="sample-questions">
             <li>
               <strong>[Desarrollo · Análisis]</strong>
               ¿Cómo anticipas los desafíos éticos del modelo de educación humanista en el proyecto que describes?
-              <div>→ Pista: enlaza valores y compromiso personal.</div>
+              <div class="hint">→ Pista: enlaza valores y compromiso personal.</div>
             </li>
             <li>
               <strong>[Tipo test · Aplicación]</strong>
               Marca la afirmación correcta sobre la evaluación formativa en la UFV.
-              <div>→ Pista: recuerda que el diálogo y la retroalimentación importan más que la nota final.</div>
+              <div class="hint">→ Pista: recuerda que el diálogo y la retroalimentación importan más que la nota final.</div>
             </li>
             <li>
               <strong>[Desarrollo · Creación]</strong>
               Diseña un protocolo para acompañar al estudiante que presenta tu asignatura a un tribunal externo.
-              <div>→ Pista: incluye estructura, rúbrica y relación con el modelo pedagógico.</div>
+              <div class="hint">→ Pista: incluye estructura, rúbrica y relación con el modelo pedagógico.</div>
             </li>
           </ul>
         </article>
@@ -107,16 +132,50 @@
     <script>
       const rangeInput = document.getElementById("questionCount");
       const valueLabel = document.getElementById("questionCountValue");
+      const fileInput = document.getElementById("fileUpload");
+      const uploadBtn = document.getElementById("uploadButton");
+      const uploadStatus = document.getElementById("uploadStatus");
+      const syllabusInput = document.getElementById("syllabusInput");
+      const generateBtn = document.getElementById("generateButton");
+      const generateStatus = document.getElementById("generateStatus");
+      const generatedList = document.getElementById("generatedList");
+      const bloomSelect = document.getElementById("bloomSelect");
+      const typeSelect = document.getElementById("typeSelect");
+      const alternativesSelect = document.getElementById("alternativesSelect");
+
       if (rangeInput && valueLabel) {
         rangeInput.addEventListener("input", () => {
           valueLabel.textContent = rangeInput.value;
         });
       }
 
-      const fileInput = document.getElementById("fileUpload");
-      const uploadBtn = document.getElementById("uploadButton");
-      const uploadStatus = document.getElementById("uploadStatus");
-      const syllabusInput = document.getElementById("syllabusInput");
+      const selectedValues = (select) => {
+        if (!select) return [];
+        return Array.from(select.selectedOptions).map((opt) => opt.value || opt.textContent.trim());
+      };
+
+      const renderGenerated = (questions) => {
+        if (!generatedList) return;
+        generatedList.innerHTML = "";
+        if (!questions.length) {
+          generatedList.innerHTML = "<li>No se generaron preguntas. Intenta ajustar los parámetros.</li>";
+          return;
+        }
+        questions.forEach((q) => {
+          const item = document.createElement("li");
+          const header = document.createElement("strong");
+          header.textContent = `[${q.question_type} · ${q.cognitive_level}]`;
+          const body = document.createElement("p");
+          body.textContent = q.question;
+          const hint = document.createElement("div");
+          hint.className = "hint";
+          hint.textContent = `→ Pista: ${q.answer_hint}`;
+          item.appendChild(header);
+          item.appendChild(body);
+          item.appendChild(hint);
+          generatedList.appendChild(item);
+        });
+      };
 
       if (uploadBtn && fileInput && syllabusInput && uploadStatus) {
         uploadBtn.addEventListener("click", async () => {
@@ -128,10 +187,7 @@
           formData.append("file", fileInput.files[0]);
           uploadStatus.textContent = "Extrayendo texto...";
           try {
-            const res = await fetch("/extract", {
-              method: "POST",
-              body: formData,
-            });
+            const res = await fetch("/extract", { method: "POST", body: formData });
             if (!res.ok) {
               const error = await res.json().catch(() => ({}));
               throw new Error(error.detail || "La extracción falló.");
@@ -141,6 +197,46 @@
             uploadStatus.textContent = "Texto extraído correctamente.";
           } catch (err) {
             uploadStatus.textContent = err.message;
+          }
+        });
+      }
+
+      if (generateBtn) {
+        generateBtn.addEventListener("click", async () => {
+          if (!syllabusInput.value.trim()) {
+            generateStatus.textContent = "Añade un temario o extrae texto para generar preguntas.";
+            return;
+          }
+          const bloomLevels = selectedValues(bloomSelect);
+          const questionTypes = selectedValues(typeSelect);
+          const payload = {
+            syllabus_text: syllabusInput.value,
+            prompt_config: {
+              bloom_levels: bloomLevels.length ? bloomLevels : ["Comprensión", "Aplicación", "Análisis"],
+              question_types: questionTypes.length ? questionTypes : ["Tipo test", "Desarrollo"],
+              number_of_questions: parseInt(rangeInput.value || "8", 10),
+              number_of_alternatives: parseInt(alternativesSelect.value || "4", 10),
+            },
+          };
+          generateBtn.disabled = true;
+          generateStatus.textContent = "Generando preguntas...";
+          try {
+            const res = await fetch("/generate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+              const error = await res.json().catch(() => ({}));
+              throw new Error(error.detail || "No se pudieron generar preguntas.");
+            }
+            const data = await res.json();
+            renderGenerated(data);
+            generateStatus.textContent = `Se han generado ${data.length} preguntas.`;
+          } catch (err) {
+            generateStatus.textContent = err.message;
+          } finally {
+            generateBtn.disabled = false;
           }
         });
       }
