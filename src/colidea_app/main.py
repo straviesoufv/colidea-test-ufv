@@ -41,6 +41,7 @@ DEFAULT_PROMPT_TEMPLATE = (
     "Nivel cognitivo: ${bloom_levels}.\n"
     "Tipos de pregunta: ${question_types}.\n"
     "Cada pregunta debe incluir ${number_of_alternatives} opciones de respuesta (una correcta y el resto distractores).\n"
+    "Integra suavemente el espíritu del modelo Formar para Transformar: aprendizaje aplicado, formación humana, acompañamiento del talento y actualización crítica de los conocimientos, sin exagerar.\n"
     "${target_audience}\n"
     "${context}\n"
     "Contexto/temario: ${syllabus_text}\n"
