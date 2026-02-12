@@ -37,6 +37,16 @@ python scripts/sample_generate.py
 - Guardar plantillas de Bloom/preferencias del docente para reutilizar en cada curso.
 - Exportador a Excel/Word (p. ej. `pandas` + `xlsxwriter`, `python-docx`).
 - Conectar a Canvas (QTI o APIs de Canvas) en una fase 2 cuando el MVP esté validado.
+- Empaquetar en Docker para entregarlo a la comisión y facilitar despliegue en Reaway o cualquier contenedor.
+
+## Ejecutar en Docker
+
+```bash
+docker build -t colidea:latest .
+docker run -p 8080:8080 colidea:latest
+```
+
+La API escucha en el puerto 8080 y expone `/generate` y `/` (sanity check). Asegúrate de pasar `OPENAI_API_KEY` en tiempo de ejecución (por ejemplo, `docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -p 8080:8080 colidea:latest`).
 
 ## Requisitos para producción
 
