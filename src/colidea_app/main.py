@@ -287,7 +287,14 @@ def _parse_model_output(output: str) -> List[dict]:
     try:
         return json.loads(output)
     except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Respuesta de IA no tiene JSON válido")
+        logger.error("Invalid IA output: %s", output)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Respuesta de IA no tiene JSON válido",
+                "raw_output": output,
+            },
+        )
 
 
 @app.post("/generate", response_model=List[QuestionResponse])
