@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Colidea · Generador de preguntas · UFV</title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+  </head>
+  <body>
+    <header>
+      <div class="tag-ufv">Comisión IA · UFV</div>
+      <h1>
+        Genera preguntas alineadas al modelo pedagógico UFV
+        <br />en minutos, desde un temario o guía docente.
+      </h1>
+      <p>
+        Colidea transforma el temario que compartes en preguntas tipo test y de desarrollo, con niveles de
+        Bloom, pistas que hablan el lenguaje de la Universidad y sugerencias listas para exportar.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-primary">Cargar temario</button>
+        <button class="btn-secondary">Ver demostración</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="grid">
+        <article class="panel-card">
+          <h2>Sube tu guía docente</h2>
+          <small>Documentos Word, PDF o texto plano. Mantendremos la confidencialidad.</small>
+          <textarea class="form-control" placeholder="Pega aquí un fragmento de tu temario ..."></textarea>
+          <div class="form-row">
+            <select class="form-control" aria-label="Nivel Bloom">
+              <option>Comprensión · Aplicación · Análisis</option>
+              <option>Síntesis · Evaluación · Creación</option>
+            </select>
+            <select class="form-control" aria-label="Tipo de pregunta">
+              <option>Tipo test · Selección múltiple</option>
+              <option>Desarrollo · Argumentación</option>
+            </select>
+          </div>
+          <div class="tags">
+            <span class="tag-ufv">Bloom</span>
+            <span class="tag-ufv tag-secondary">Canvas</span>
+            <span class="tag-ufv">Humanista</span>
+          </div>
+          <button class="btn-primary">Generar preguntas</button>
+        </article>
+
+        <article class="panel-card">
+          <h2>Panel rápido</h2>
+          <p>
+            A cada generación, Colidea devuelve preguntas marcadas con el nivel cognitivo, tipo de evaluación y una
+            pista rápida. Exporta a Excel/Word o prepara el CSV para importarlo luego en Canvas.
+          </p>
+          <ul class="sample-questions">
+            <li>
+              <strong>[Desarrollo · Análisis]</strong>
+              ¿Cómo anticipas los desafíos éticos del modelo de educación humanista en el proyecto que describes?
+              <div>→ Pista: enlaza valores y compromiso personal.</div>
+            </li>
+            <li>
+              <strong>[Tipo test · Aplicación]</strong>
+              Marca la afirmación correcta sobre la evaluación formativa en la UFV.
+              <div>→ Pista: recuerda que el diálogo y la retroalimentación importan más que la nota final.</div>
+            </li>
+            <li>
+              <strong>[Desarrollo · Creación]</strong>
+              Diseña un protocolo para acompañar al estudiante que presenta tu asignatura a un tribunal externo.
+              <div>→ Pista: incluye estructura, rúbrica y relación con el modelo pedagógico.</div>
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="panel-card">
+          <h2>¿Qué sigue?</h2>
+          <p>
+            Canvas + Canvas New Quizzes en fase 2. Mientras tanto, generamos el CSV/Word que el profesorado ya conoce.
+            También estamos trabajando para usar la paleta UFV y que la app se perciba como parte del campus digital.
+          </p>
+          <div class="footer-note">
+            Modelo actual: <strong>{{ model }}</strong> · Proveedor: <strong>{{ provider }}</strong>
+          </div>
+        </article>
+        <article class="panel-card">
+          <h2>Indicadores de impacto</h2>
+          <p>Mostramos datos orientativos para comunicar a la Comisión:</p>
+          <ul class="sample-questions">
+            <li>+30% de tiempo ahorrado en creación de preguntas.</li>
+            <li>7 plantillas de Bloom configuradas.</li>
+            <li>3 exportaciones (Word, CSV, Canvas-ready) disponibles.</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,191 @@
+:root {
+  --ufv-deep: #001a33;
+  --ufv-royal: #004773;
+  --ufv-spring: #00d084;
+  --ufv-orange: #ff6900;
+  --ufv-snow: #f6f7f7;
+  --ufv-smoke: #efefef;
+  --ufv-grey: #abb8c3;
+  --ufv-purple: #9b51e0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--ufv-snow);
+  color: #111;
+  margin: 0;
+  min-height: 100vh;
+}
+
+img {
+  max-width: 100%;
+}
+
+header {
+  background: linear-gradient(120deg, var(--ufv-deep), #00385a);
+  color: white;
+  font-family: 'Roboto Slab', serif;
+  padding: 3rem 5vw 2.5rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  line-height: 1.2;
+}
+
+header p {
+  margin: 1.25rem 0 2rem;
+  font-size: 1.15rem;
+  max-width: 48rem;
+}
+
+header .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.btn-primary {
+  background: var(--ufv-orange);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 0.9rem 1.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(255, 105, 0, 0.4);
+}
+
+.btn-secondary {
+  background: var(--ufv-spring);
+  color: var(--ufv-deep);
+  border-radius: 999px;
+  padding: 0.9rem 1.6rem;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+main {
+  padding: 2.5rem 5vw 4rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.panel-card {
+  background: white;
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  box-shadow: 0 20px 40px rgba(0, 26, 51, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel-card h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--ufv-royal);
+  background: linear-gradient(90deg, var(--ufv-royal), var(--ufv-deep));
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.panel-card small {
+  color: var(--ufv-grey);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--ufv-smoke);
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--ufv-snow);
+}
+
+textarea.form-control {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.form-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-ufv {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--ufv-spring);
+  color: var(--ufv-deep);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.tag-secondary {
+  background: var(--ufv-royal);
+  color: white;
+}
+
+.sample-questions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sample-questions li {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: var(--ufv-smoke);
+  border: 1px solid rgba(0, 71, 115, 0.1);
+}
+
+.sample-questions strong {
+  color: var(--ufv-deep);
+}
+
+.footer-note {
+  text-align: center;
+  padding-top: 1rem;
+  color: var(--ufv-grey);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  header {
+    padding: 2.5rem 1.25rem;
+  }
+
+  main {
+    padding: 2rem 1.25rem 3rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+}

@@ -3,7 +3,10 @@ import json
 import os
 
 import requests
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 try:
@@ -12,6 +15,13 @@ except ImportError:  # pragma: no cover
     openai = None
 
 app = FastAPI(title="Colidea – Generador de preguntas de evaluación")
+
+BASE_DIR = os.path.dirname(__file__)
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=TEMPLATE_DIR)
 
 PROVIDER = os.environ.get("COLIDEA_PROVIDER", "openrouter").lower().strip()
 DEFAULT_MODEL = "openrouter/google/gpt-4o-mini" if PROVIDER == "openrouter" else "gpt-4o-mini"
@@ -167,10 +177,21 @@ def generate_questions(payload: GenerationPayload):
     return raw
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
+def landing(request: Request):
+    context = {
+        "request": request,
+        "model": MODEL,
+        "provider": PROVIDER.upper(),
+    }
+    return templates.TemplateResponse("index.html", context)
+
+
+@app.get("/health")
 def healthcheck():
     return {
         "status": "ready",
         "model": MODEL,
+        "provider": PROVIDER,
         "notes": "Carga syllabus, define niveles de Bloom y tipos de preguntas."
     }

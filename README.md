@@ -40,6 +40,11 @@ También puedes ejecutar el simulador offline:
 python scripts/sample_generate.py
 ```
 
+## Interfaz web (maqueta UFV)
+La aplicación suma una landing básica en `/` con la paleta UFV (header hero, tarjetas y botones con `Roboto Slab`/sans-serif y colores institucionales). Está servida desde `src/colidea_app/templates/index.html` y `src/colidea_app/static/css/main.css`. Cuando el contenedor está en marcha (`http://localhost:8080`) puedes navegar a esa vista para enseñársela a la Comisión.
+
+La API permanece accesible en `/generate` y `/health` muestra el modelo activo. Mantén `OPENAI_API_KEY` o `OPENROUTER_API_KEY` en el entorno según el proveedor.
+
 ## Próximos pasos inmediatos
 
 - Añadir carga de archivos (Word/PDF) con `python-multipart` y `pdfminer`/`python-docx`.
