@@ -4,3 +4,5 @@ openai==1.10.0
 python-multipart==0.0.6
 requests==2.31.0
 jinja2==3.1.2
+python-docx==0.8.13
+pdfplumber==0.9.0

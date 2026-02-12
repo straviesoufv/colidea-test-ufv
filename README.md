@@ -41,9 +41,12 @@ python scripts/sample_generate.py
 ```
 
 ## Interfaz web (maqueta UFV)
-La aplicación suma una landing básica en `/` con la paleta UFV (header hero, tarjetas y botones con `Roboto Slab`/sans-serif y colores institucionales). Está servida desde `src/colidea_app/templates/index.html` y `src/colidea_app/static/css/main.css`. En el formulario puedes ajustar el número de preguntas entre 3 y 10 con el control deslizante y seguir seleccionando niveles de Bloom y tipos de pregunta. Cuando el contenedor está en marcha (`http://localhost:8080`) puedes navegar a esa vista para enseñársela a la Comisión.
+La aplicación suma una landing básica en `/` con la paleta UFV (header hero, tarjetas y botones con `Roboto Slab`/sans-serif y colores institucionales). Está servida desde `src/colidea_app/templates/index.html` y `src/colidea_app/static/css/main.css`. En el formulario puedes ajustar el número de preguntas entre 3 y 10 con el control deslizante, seleccionar niveles de Bloom y tipos de pregunta, y usar el botón “Extraer texto” para subir un PDF, DOCX o TXT y volcar su contenido automáticamente en el campo principal. Cuando el contenedor está en marcha (`http://localhost:8080`) puedes navegar a esa vista para enseñársela a la Comisión.
 
 También existe una página de administración en `/admin` para cambiar proveedor, modelo y la plantilla de prompt sin tocar código o reiniciar el contenedor. La configuración se guarda en `src/colidea_app/admin_config.json`, y puedes editarla desde la GUI para probar prompts distintos antes de generar las preguntas. La plantilla puede usar `${number_of_questions}` para que el modelo sepa cuántas preguntas debe devolver.
+
+## Carga de documentos
+Para preparar preguntas a partir de documentos ya existentes (PDF/Word/TXT), usa el control “Extraer texto” que sube el archivo al endpoint `/extract`. El backend usa `pdfplumber` y `python-docx` para leer el contenido y devuelve el texto plano a la aplicación, que lo muestra en el textarea principal y lo usa en el prompt. Si el archivo no contiene texto legible se mostrará un error en pantalla.
 
 La API permanece accesible en `/generate` y `/health` muestra el modelo activo. Mantén `OPENAI_API_KEY` o `OPENROUTER_API_KEY` en el entorno según el proveedor.
 

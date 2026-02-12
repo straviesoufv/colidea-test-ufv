@@ -28,7 +28,7 @@
         <article class="panel-card">
           <h2>Sube tu guía docente</h2>
           <small>Documentos Word, PDF o texto plano. Mantendremos la confidencialidad.</small>
-          <textarea class="form-control" placeholder="Pega aquí un fragmento de tu temario ..."></textarea>
+          <textarea id="syllabusInput" class="form-control" placeholder="Pega aquí un fragmento de tu temario ..."></textarea>
           <div class="form-row">
             <select class="form-control" aria-label="Nivel Bloom">
               <option>Comprensión · Aplicación · Análisis</option>
@@ -39,6 +39,11 @@
               <option>Desarrollo · Argumentación</option>
             </select>
           </div>
+          <div class="form-row">
+            <input id="fileUpload" type="file" class="form-control" accept=".pdf,.docx,.txt" />
+            <button id="uploadButton" type="button" class="btn-secondary">Extraer texto</button>
+          </div>
+          <p id="uploadStatus" class="footer-note"></p>
           <div class="range-control">
             <label for="questionCount">Número de preguntas: <span id="questionCountValue">8</span></label>
             <input type="range" id="questionCount" min="3" max="10" value="8" />
@@ -105,6 +110,38 @@
       if (rangeInput && valueLabel) {
         rangeInput.addEventListener("input", () => {
           valueLabel.textContent = rangeInput.value;
+        });
+      }
+
+      const fileInput = document.getElementById("fileUpload");
+      const uploadBtn = document.getElementById("uploadButton");
+      const uploadStatus = document.getElementById("uploadStatus");
+      const syllabusInput = document.getElementById("syllabusInput");
+
+      if (uploadBtn && fileInput && syllabusInput && uploadStatus) {
+        uploadBtn.addEventListener("click", async () => {
+          if (!fileInput.files.length) {
+            uploadStatus.textContent = "Selecciona un archivo para extraer texto.";
+            return;
+          }
+          const formData = new FormData();
+          formData.append("file", fileInput.files[0]);
+          uploadStatus.textContent = "Extrayendo texto...";
+          try {
+            const res = await fetch("/extract", {
+              method: "POST",
+              body: formData,
+            });
+            if (!res.ok) {
+              const error = await res.json().catch(() => ({}));
+              throw new Error(error.detail || "La extracción falló.");
+            }
+            const data = await res.json();
+            syllabusInput.value = data.text;
+            uploadStatus.textContent = "Texto extraído correctamente.";
+          } catch (err) {
+            uploadStatus.textContent = err.message;
+          }
         });
       }
     </script>

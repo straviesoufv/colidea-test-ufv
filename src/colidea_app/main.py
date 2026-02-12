@@ -6,7 +6,9 @@ from string import Template
 from threading import Lock
 
 import requests
-from fastapi import FastAPI, HTTPException, Request
+import docx
+import pdfplumber
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -118,6 +120,33 @@ class AdminConfigPayload(BaseModel):
     provider: str
     model: str
     prompt_template: str
+
+
+async def _read_file(file: UploadFile) -> str:
+    file.file.seek(0)
+    if file.filename.lower().endswith(".pdf"):
+        with pdfplumber.open(file.file) as pdf:
+            text = "\n".join((page.extract_text() or "") for page in pdf.pages)
+    elif file.filename.lower().endswith(".docx") or file.filename.lower().endswith(".doc"):
+        file.file.seek(0)
+        document = docx.Document(file.file)
+        text = "\n".join(para.text for para in document.paragraphs if para.text)
+    else:
+        contents = await file.read()
+        text = contents.decode("utf-8", errors="ignore")
+    file.file.seek(0)
+    return text.strip()
+
+
+@app.post("/extract")
+async def extract_text(file: UploadFile = File(...)):
+    try:
+        extracted = await _read_file(file)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"No se pudo extraer el texto: {exc}")
+    if not extracted:
+        raise HTTPException(status_code=400, detail="El documento no contiene texto legible.")
+    return {"text": extracted}
 
 
 def build_prompt(payload: GenerationPayload) -> str:
