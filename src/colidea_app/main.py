@@ -113,10 +113,10 @@ def get_active_model() -> str:
 class PromptConfig(BaseModel):
     bloom_levels: List[str]
     question_types: List[str]
-    context: Optional[str]
+    context: Optional[str] = None
     number_of_questions: int = 8
     number_of_alternatives: int = 4
-    target_audience: Optional[str]
+    target_audience: Optional[str] = None
 
 
 class QuestionResponse(BaseModel):
