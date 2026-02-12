@@ -25,11 +25,11 @@ uvicorn src.colidea_app.main:app --reload
 
 Define `OPENAI_API_KEY` en el entorno y opcionalmente `COLIDEA_MODEL` (por defecto `gpt-4o-mini`).
 
-colidea-test-ufv siempre puede apuntar a OpenRouter configurando `COLIDEA_PROVIDER=openrouter`, `COLIDEA_MODEL=openrouter/openai/gpt-4o-mini` y pasando `OPENROUTER_API_KEY`. Por ejemplo:
+colidea-test-ufv siempre puede apuntar a OpenRouter configurando `COLIDEA_PROVIDER=openrouter`, `COLIDEA_MODEL=google/gemini-3-flash-preview` y pasando `OPENROUTER_API_KEY`. Por ejemplo:
 
 ```bash
 COLIDEA_PROVIDER=openrouter \
-  COLIDEA_MODEL=openrouter/google/gpt-4o-mini \
+  COLIDEA_MODEL=google/gemini-3-flash-preview \
   OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
   docker run -e COLIDEA_PROVIDER -e COLIDEA_MODEL -e OPENROUTER_API_KEY -p 8080:8080 colidea-test-ufv:latest
 ```

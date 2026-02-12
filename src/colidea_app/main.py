@@ -49,7 +49,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
 
 ENV_PROVIDER = os.environ.get("COLIDEA_PROVIDER", "openrouter").lower().strip()
-DEFAULT_MODEL = "openrouter/openai/gpt-4o-mini" if ENV_PROVIDER == "openrouter" else "gpt-4o-mini"
+DEFAULT_MODEL = "google/gemini-3-flash-preview" if ENV_PROVIDER == "openrouter" else "gpt-4o-mini"
 ENV_MODEL = os.environ.get("COLIDEA_MODEL", DEFAULT_MODEL)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
