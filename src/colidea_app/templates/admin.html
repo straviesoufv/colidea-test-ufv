@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Colidea · Administración</title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+  </head>
+  <body>
+    <header>
+      <div class="tag-ufv tag-secondary">Admin · Colidea</div>
+      <h1>Configura los modelos y prompts sin tocar el código</h1>
+      <p>
+        Esta página guarda la combinación de proveedor, modelo y plantilla del prompt. Cada vez que se genera una
+        petición, Colidea usa esta configuración en lugar de hardcodearlo.
+      </p>
+      <div class="hero-actions">
+        <a class="btn-secondary" href="/">Volver a la landing</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel-card">
+        <h2>Opciones del proveedor</h2>
+        <form id="adminForm">
+          <label for="providerSelect">Proveedor</label>
+          <select id="providerSelect" class="form-control" name="provider">
+            <option value="openrouter">OpenRouter</option>
+            <option value="openai">OpenAI</option>
+          </select>
+
+          <label for="modelInput">Modelo</label>
+          <input id="modelInput" class="form-control" name="model" type="text" placeholder="openrouter/google/gpt-4o-mini" />
+
+          <label for="promptTextarea">Plantilla del prompt</label>
+          <textarea id="promptTextarea" class="form-control" name="prompt_template" rows="10"></textarea>
+
+          <div class="tags">
+            <span class="tag-ufv">Provider+</span>
+            <span class="tag-ufv">Editable</span>
+          </div>
+
+          <div style="display:flex;gap:0.85rem;flex-wrap:wrap;margin-top:1rem;">
+            <button class="btn-primary" type="submit">Guardar cambios</button>
+            <button class="btn-secondary" type="button" id="resetPrompt">Restaurar plantilla base</button>
+          </div>
+        </form>
+        <p id="saveStatus" class="footer-note" aria-live="polite"></p>
+      </section>
+
+      <section class="panel-card">
+        <h2>Guía rápida</h2>
+        <p>
+          - Usa `${"${bloom_levels}"}` para insertar niveles de Bloom separados por coma.
+          - Usa `${"${question_types}"}` para tipos de pregunta y `${"${syllabus_text}"}` para el contenido.
+          - Los campos `${"${context}"}` y `${"${target_audience}"}` se rellenan automáticamente con las notas extras.
+        </p>
+      </section>
+    </main>
+
+    <script>
+      const form = document.getElementById("adminForm");
+      const providerSelect = document.getElementById("providerSelect");
+      const modelInput = document.getElementById("modelInput");
+      const promptTextarea = document.getElementById("promptTextarea");
+      const status = document.getElementById("saveStatus");
+      const resetBtn = document.getElementById("resetPrompt");
+      const defaultPrompt = {{ default_prompt | tojson | safe }};
+
+      const loadConfig = async () => {
+        const res = await fetch("/admin/config");
+        if (!res.ok) {
+          status.textContent = "No se pudo cargar la configuración.";
+          return;
+        }
+        const data = await res.json();
+        providerSelect.value = data.provider;
+        modelInput.value = data.model;
+        promptTextarea.value = data.prompt_template;
+      };
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        status.textContent = "Guardando...";
+        const payload = {
+          provider: providerSelect.value,
+          model: modelInput.value,
+          prompt_template: promptTextarea.value,
+        };
+        const res = await fetch("/admin/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          status.textContent = "Configuración guardada. Recarga la landing para ver los cambios.";
+        } else {
+          const error = await res.json().catch(() => ({}));
+          status.textContent = error.detail || "Fallo al guardar.";
+        }
+      });
+
+      resetBtn.addEventListener("click", () => {
+        promptTextarea.value = defaultPrompt;
+      });
+
+      loadConfig();
+    </script>
+  </body>
+</html>

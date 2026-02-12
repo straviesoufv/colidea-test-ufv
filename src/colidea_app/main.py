@@ -1,6 +1,9 @@
 from typing import List, Optional
 import json
 import os
+from pathlib import Path
+from string import Template
+from threading import Lock
 
 import requests
 from fastapi import FastAPI, HTTPException, Request
@@ -19,15 +22,76 @@ app = FastAPI(title="Colidea – Generador de preguntas de evaluación")
 BASE_DIR = os.path.dirname(__file__)
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+CONFIG_PATH = Path(os.environ.get("COLIDEA_ADMIN_CONFIG", os.path.join(BASE_DIR, "admin_config.json")))
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATE_DIR)
 
-PROVIDER = os.environ.get("COLIDEA_PROVIDER", "openrouter").lower().strip()
-DEFAULT_MODEL = "openrouter/google/gpt-4o-mini" if PROVIDER == "openrouter" else "gpt-4o-mini"
-MODEL = os.environ.get("COLIDEA_MODEL", DEFAULT_MODEL)
+ENV_PROVIDER = os.environ.get("COLIDEA_PROVIDER", "openrouter").lower().strip()
+DEFAULT_MODEL = "openrouter/google/gpt-4o-mini" if ENV_PROVIDER == "openrouter" else "gpt-4o-mini"
+ENV_MODEL = os.environ.get("COLIDEA_MODEL", DEFAULT_MODEL)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+
+DEFAULT_PROMPT_TEMPLATE = (
+    "Eres el asistente de evaluación de la UFV.\n"
+    "Genera preguntas que el profesorado pueda reutilizar en quices y pruebas escritas.\n"
+    "Nivel cognitivo: ${bloom_levels}.\n"
+    "Tipos de pregunta: ${question_types}.\n"
+    "${target_audience}\n"
+    "${context}\n"
+    "Contexto/temario: ${syllabus_text}\n"
+    "Devuelve un JSON con campos: question, question_type, cognitive_level, answer_hint.\n"
+    "Incluye al menos una sugerencia para exportarlo a Excel/Word."
+)
+
+config_lock = Lock()
+admin_config = {}
+
+
+def _default_admin_config():
+    return {
+        "provider": ENV_PROVIDER,
+        "model": ENV_MODEL,
+        "prompt_template": DEFAULT_PROMPT_TEMPLATE,
+    }
+
+
+def load_admin_config() -> dict:
+    if not CONFIG_PATH.exists():
+        write_admin_config(_default_admin_config())
+    with CONFIG_PATH.open("r", encoding="utf-8") as fh:
+        try:
+            return json.load(fh)
+        except json.JSONDecodeError:
+            return _default_admin_config()
+
+
+def write_admin_config(data: dict):
+    with CONFIG_PATH.open("w", encoding="utf-8") as fh:
+        json.dump(data, fh, ensure_ascii=False, indent=2)
+
+
+with config_lock:
+    admin_config = load_admin_config()
+
+
+def _provider_default_model(provider: str) -> str:
+    return "openrouter/google/gpt-4o-mini" if provider == "openrouter" else "gpt-4o-mini"
+
+
+def get_active_provider() -> str:
+    return (admin_config.get("provider") or ENV_PROVIDER).lower().strip()
+
+
+def get_active_model() -> str:
+    model = admin_config.get("model")
+    if model:
+        return model
+    provider = get_active_provider()
+    if provider == ENV_PROVIDER and ENV_MODEL:
+        return ENV_MODEL
+    return _provider_default_model(provider)
 
 
 class PromptConfig(BaseModel):
@@ -50,28 +114,30 @@ class GenerationPayload(BaseModel):
     prompt_config: PromptConfig
 
 
+class AdminConfigPayload(BaseModel):
+    provider: str
+    model: str
+    prompt_template: str
+
+
 def build_prompt(payload: GenerationPayload) -> str:
+    template_str = admin_config.get("prompt_template") or DEFAULT_PROMPT_TEMPLATE
+    template = Template(template_str)
     config = payload.prompt_config
-    lines = [
-        "Eres el asistente de evaluación de la UFV.",
-        "Genera preguntas que el profesorado pueda reutilizar en quices y pruebas escritas.",
-        f"Nivel cognitivo: {', '.join(config.bloom_levels)}.",
-        f"Tipos de pregunta: {', '.join(config.question_types)}.",
-    ]
-    if config.target_audience:
-        lines.append(f"Dirigido a: {config.target_audience}.")
-    if config.context:
-        lines.append(f"Detalles adicionales: {config.context}.")
-    lines.append(
-        f"Contexto/temario: {payload.syllabus_text.strip()}"
+    context_notes = f"Detalles adicionales: {config.context}." if config.context else ""
+    audience_tags = f"Dirigido a: {config.target_audience}." if config.target_audience else ""
+    return template.safe_substitute(
+        syllabus_text=payload.syllabus_text.strip(),
+        bloom_levels=", ".join(config.bloom_levels),
+        question_types=", ".join(config.question_types),
+        context=context_notes,
+        target_audience=audience_tags,
     )
-    lines.append("Devuelve un JSON con campos: question, question_type, cognitive_level, answer_hint.")
-    lines.append("Incluye al menos una sugerencia para exportarlo a Excel/Word.")
-    return "\n".join(lines)
 
 
 def call_model(prompt: str) -> List[dict]:
-    if PROVIDER == "openrouter":
+    provider = get_active_provider()
+    if provider == "openrouter":
         return call_openrouter_model(prompt)
     return call_openai_model(prompt)
 
@@ -89,7 +155,7 @@ def call_openai_model(prompt: str) -> List[dict]:
         )
     client = openai.OpenAI(api_key=OPENAI_API_KEY)
     response = client.responses.create(
-        model=MODEL,
+        model=get_active_model(),
         input=prompt,
         max_tokens=800,
         temperature=0.3,
@@ -108,7 +174,7 @@ def call_openrouter_model(prompt: str) -> List[dict]:
             detail="No hay clave OPENROUTER_API_KEY en el entorno.",
         )
     payload = {
-        "model": MODEL,
+        "model": get_active_model(),
         "input": prompt,
         "temperature": 0.3,
         "max_output_tokens": 800,
@@ -181,17 +247,51 @@ def generate_questions(payload: GenerationPayload):
 def landing(request: Request):
     context = {
         "request": request,
-        "model": MODEL,
-        "provider": PROVIDER.upper(),
+        "model": get_active_model(),
+        "provider": get_active_provider().upper(),
     }
     return templates.TemplateResponse("index.html", context)
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def admin_page(request: Request):
+    return templates.TemplateResponse(
+        "admin.html",
+        {
+            "request": request,
+            "provider": get_active_provider(),
+            "model": get_active_model(),
+            "prompt_template": admin_config.get("prompt_template", DEFAULT_PROMPT_TEMPLATE),
+            "default_prompt": DEFAULT_PROMPT_TEMPLATE,
+        },
+    )
+
+
+@app.get("/admin/config")
+def admin_config_get():
+    with config_lock:
+        return {
+            "provider": get_active_provider(),
+            "model": get_active_model(),
+            "prompt_template": admin_config.get("prompt_template", DEFAULT_PROMPT_TEMPLATE),
+        }
+
+
+@app.post("/admin/config")
+def admin_config_update(payload: AdminConfigPayload):
+    with config_lock:
+        admin_config["provider"] = payload.provider.lower().strip()
+        admin_config["model"] = payload.model.strip()
+        admin_config["prompt_template"] = payload.prompt_template.strip()
+        write_admin_config(admin_config)
+    return {"status": "ok"}
 
 
 @app.get("/health")
 def healthcheck():
     return {
         "status": "ready",
-        "model": MODEL,
-        "provider": PROVIDER,
+        "model": get_active_model(),
+        "provider": get_active_provider(),
         "notes": "Carga syllabus, define niveles de Bloom y tipos de preguntas."
     }
