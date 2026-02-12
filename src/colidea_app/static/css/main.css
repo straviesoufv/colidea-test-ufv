@@ -126,6 +126,18 @@ textarea.form-control {
   flex-wrap: wrap;
 }
 
+.range-control {
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.range-control input[type="range"] {
+  accent-color: var(--ufv-royal);
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;

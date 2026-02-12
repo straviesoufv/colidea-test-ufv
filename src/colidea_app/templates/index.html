@@ -39,6 +39,10 @@
               <option>Desarrollo · Argumentación</option>
             </select>
           </div>
+          <div class="range-control">
+            <label for="questionCount">Número de preguntas: <span id="questionCountValue">8</span></label>
+            <input type="range" id="questionCount" min="3" max="10" value="8" />
+          </div>
           <div class="tags">
             <span class="tag-ufv">Bloom</span>
             <span class="tag-ufv tag-secondary">Canvas</span>
@@ -95,5 +99,14 @@
         </article>
       </section>
     </main>
+    <script>
+      const rangeInput = document.getElementById("questionCount");
+      const valueLabel = document.getElementById("questionCountValue");
+      if (rangeInput && valueLabel) {
+        rangeInput.addEventListener("input", () => {
+          valueLabel.textContent = rangeInput.value;
+        });
+      }
+    </script>
   </body>
 </html>

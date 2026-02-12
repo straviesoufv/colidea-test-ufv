@@ -35,7 +35,7 @@ OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
 DEFAULT_PROMPT_TEMPLATE = (
     "Eres el asistente de evaluación de la UFV.\n"
-    "Genera preguntas que el profesorado pueda reutilizar en quices y pruebas escritas.\n"
+    "Genera ${number_of_questions} preguntas que el profesorado pueda reutilizar en quices y pruebas escritas.\n"
     "Nivel cognitivo: ${bloom_levels}.\n"
     "Tipos de pregunta: ${question_types}.\n"
     "${target_audience}\n"
@@ -132,6 +132,7 @@ def build_prompt(payload: GenerationPayload) -> str:
         question_types=", ".join(config.question_types),
         context=context_notes,
         target_audience=audience_tags,
+        number_of_questions=config.number_of_questions,
     )
 
 
